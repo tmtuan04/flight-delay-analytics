@@ -1,0 +1,168 @@
+import { useState } from "react";
+import { Row, Col, Select, DatePicker } from "antd";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import dayjs from "dayjs";
+
+const { RangePicker } = DatePicker;
+const { Option } = Select;
+
+// State ban đầu
+const initialFilters = {
+    dateRange: null,
+    airline: [],
+    originAirport: [],
+    destinationAirport: [],
+    flightStatus: [],
+    airport: [],
+};
+
+const MIN_DATE = dayjs("2025-01-01");
+const MAX_DATE = dayjs("2025-05-31");
+
+const disabledDate = (current) => {
+    if (!current) return false;
+
+    return (
+        current.isBefore(MIN_DATE, "day") ||
+        current.isAfter(MAX_DATE, "day")
+    );
+};
+
+export default function FilterBar({ enabledFilters = [], onChange }) {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
+
+    const [filters, setFilters] = useState(initialFilters);
+
+    const handleChange = (key, value) => {
+        setFilters((prev) => {
+            const newFilters = { ...prev, [key]: value };
+            if (onChange) onChange(newFilters);
+            return newFilters;
+        });
+    };
+
+    const renderSelect = (placeholder, filterKey, options) => (
+        <Select
+            size="large"
+            mode="multiple"
+            allowClear
+            placeholder={placeholder}
+            value={filters[filterKey]}
+            onChange={(val) => handleChange(filterKey, val)}
+            style={{ width: "100%" }}
+        >
+            {options.map((opt) => (
+                <Option key={opt.value} value={opt.value}>
+                    {opt.label}
+                </Option>
+            ))}
+        </Select>
+    );
+
+    return (
+        <Row gutter={[16, 16]}>
+            {enabledFilters.includes("dateRange") && (
+                <Col xs={24} sm={12} md={8}>
+                    <RangePicker
+                        size="large"
+                        format="DD/MM/YYYY"
+                        defaultPickerValue={[
+                            dayjs("2025-01-01"),
+                            dayjs("2025-01-01"),
+                        ]}
+                        disabledDate={disabledDate}
+                        allowClear
+                        value={
+                            searchParams.get("from") && searchParams.get("to")
+                                ? [
+                                    dayjs(searchParams.get("from")),
+                                    dayjs(searchParams.get("to")),
+                                ]
+                                : null
+                        }
+                        onChange={(dates) => {
+                            const params = new URLSearchParams(searchParams.toString());
+
+                            if (!dates) {
+                                params.delete("from");
+                                params.delete("to");
+
+                                navigate({
+                                    pathname: location.pathname,
+                                    search: params.toString(),
+                                });
+
+                                return;
+                            }
+
+                            params.set("from", dayjs(dates[0]).format("DD-MM-YYYY"));
+                            params.set("to", dayjs(dates[1]).format("DD-MM-YYYY"));
+
+                            navigate({
+                                pathname: location.pathname,
+                                search: params.toString(),
+                            });
+                        }}
+                    />
+                </Col>
+            )}
+
+            {enabledFilters.includes("airline") && (
+                <Col xs={24} sm={12} md={8}>
+                    {renderSelect("Airline (Hãng bay)", "airline", [
+                        { value: "AA", label: "American Airlines" },
+                        { value: "DL", label: "Delta Airlines" },
+                        { value: "UA", label: "United Airlines" },
+                        { value: "WN", label: "Southwest" },
+                    ])}
+                </Col>
+            )}
+
+            {enabledFilters.includes("originAirport") && (
+                <Col xs={24} sm={12} md={8}>
+                    {renderSelect("Origin Airport (Sân bay đi)", "originAirport", [
+                        { value: "JFK", label: "JFK - New York" },
+                        { value: "LAX", label: "LAX - Los Angeles" },
+                        { value: "ORD", label: "ORD - Chicago O'Hare" },
+                        { value: "DFW", label: "DFW - Dallas/Fort Worth" },
+                    ])}
+                </Col>
+            )}
+
+            {enabledFilters.includes("destinationAirport") && (
+                <Col xs={24} sm={12} md={8}>
+                    {renderSelect("Destination Airport (Sân bay đến)", "destinationAirport", [
+                        { value: "ATL", label: "ATL - Atlanta" },
+                        { value: "SEA", label: "SEA - Seattle" },
+                        { value: "MIA", label: "MIA - Miami" },
+                        { value: "SFO", label: "SFO - San Francisco" },
+                    ])}
+                </Col>
+            )}
+
+            {enabledFilters.includes("flightStatus") && (
+                <Col xs={24} sm={12} md={8}>
+                    {renderSelect("Flight Status (Trạng thái)", "flightStatus", [
+                        { value: "On-Time", label: "On-Time" },
+                        { value: "Delayed", label: "Delayed" },
+                        { value: "Cancelled", label: "Cancelled" },
+                        { value: "Diverted", label: "Diverted" },
+                    ])}
+                </Col>
+            )}
+
+            {enabledFilters.includes("airport") && (
+                <Col xs={24} sm={12} md={8}>
+                    {renderSelect("Airport (Sân bay)", "airport", [
+                        { value: "ATL", label: "ATL - Atlanta" },
+                        { value: "ORD", label: "ORD - Chicago O'Hare" },
+                        { value: "SFO", label: "SFO - San Francisco" },
+                        { value: "JFK", label: "JFK - New York" },
+                    ])}
+                </Col>
+            )}
+        </Row>
+    );
+}
