@@ -58,8 +58,8 @@ export default function OverviewTab() {
         if (!from || !to) return null;
 
         return {
-            from: dayjs(from).startOf("day").toDate(),
-            to: dayjs(to).endOf("day").toDate(),
+            from: dayjs(from).startOf("day"),
+            to: dayjs(to).startOf("day"),   
         };
     }, [searchParams]);
 
@@ -115,9 +115,9 @@ export default function OverviewTab() {
                 <div style={{ marginTop: 8 }}>
                     <Text type="secondary" italic>
                         Data from{" "}
-                        <b>{dayjs(range.from).format("DD/MM/YYYY")}</b>{" "}
+                        <b>{range.from.format("DD/MM/YYYY")}</b>{" "}
                         to{" "}
-                        <b>{dayjs(range.to).format("DD/MM/YYYY")}</b>
+                        <b>{range.to.format("DD/MM/YYYY")}</b>
                         {" "}— applies to <b>summary cards</b> only.
                     </Text>
                 </div>
