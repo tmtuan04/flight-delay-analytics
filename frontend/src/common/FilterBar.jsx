@@ -3,6 +3,7 @@ import { Row, Col, Select, DatePicker } from "antd";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { getAirlinesFromDailyStats } from "../api/airline";
+import { getAirportOptions } from "../api/airport";
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -14,7 +15,7 @@ const initialFilters = {
 };
 
 const MIN_DATE = dayjs("2025-01-01");
-const MAX_DATE = dayjs("2025-05-31");
+const MAX_DATE = dayjs("2025-06-30");
 
 const disabledDate = (current) => {
     if (!current) return false;
@@ -30,6 +31,8 @@ export default function FilterBar({ enabledFilters = [], onChange }) {
     const [searchParams] = useSearchParams();
     const [filters, setFilters] = useState(initialFilters);
     const [airlineOptions, setAirlineOptions] = useState([]);
+    const [airportOptions, setAirportOptions] = useState([]);
+    const [loadingAirports, setLoadingAirports] = useState(false);
 
     useEffect(() => {
         if (enabledFilters.includes("airline")) {
@@ -40,6 +43,25 @@ export default function FilterBar({ enabledFilters = [], onChange }) {
                 }));
                 setAirlineOptions(options);
             });
+        }
+    }, [enabledFilters]);
+
+    useEffect(() => {
+        if (enabledFilters.includes("airport")) {
+            setLoadingAirports(true);
+
+            getAirportOptions()
+                .then((data) => {
+                    const options = data.map((item) => ({
+                        value: item.airportCode,
+                        label: `${item.airportCode} - ${item.airportName}`,
+                    }));
+
+                    setAirportOptions(options);
+                })
+                .finally(() => {
+                    setLoadingAirports(false);
+                });
         }
     }, [enabledFilters]);
 
@@ -97,6 +119,12 @@ export default function FilterBar({ enabledFilters = [], onChange }) {
         </Select>
     );
 
+    const airportPlaceholder = loadingAirports
+        ? "Loading airports..."
+        : airportOptions.length > 0
+            ? `Airport (${airportOptions.length} sân bay)`
+            : "Airport (Sân bay)";
+
     return (
         <Row gutter={[16, 16]}>
             {enabledFilters.includes("dateRange") && (
@@ -114,10 +142,9 @@ export default function FilterBar({ enabledFilters = [], onChange }) {
                         value={
                             searchParams.get("from") && searchParams.get("to")
                                 ? [
-                                      dayjs(searchParams.get("from")), // ISO tự parse đúng
-                                      dayjs(searchParams.get("to")),
-                                  ]
-                                : null
+                                    dayjs(searchParams.get("from")),
+                                    dayjs(searchParams.get("to")),
+                                ] : null
                         }
                         onChange={(dates) => {
                             const params = new URLSearchParams(
@@ -224,13 +251,30 @@ export default function FilterBar({ enabledFilters = [], onChange }) {
             )}
 
             {enabledFilters.includes("airport") && (
-                <Col xs={24} sm={12} md={8}>
-                    {renderSelect("Airport (Sân bay)", "airport", [
-                        { value: "ATL", label: "ATL - Atlanta" },
-                        { value: "ORD", label: "ORD - Chicago O'Hare" },
-                        { value: "SFO", label: "SFO - San Francisco" },
-                        { value: "JFK", label: "JFK - New York" },
-                    ])}
+                <Col xs={24} sm={24} md={6}>
+                    <Select
+                        size="large"
+                        mode="multiple"
+                        allowClear
+                        placeholder={airportPlaceholder}
+                        loading={loadingAirports}
+                        notFoundContent={
+                            loadingAirports ? "Loading..." : "No data"
+                        }
+                        style={{ width: "100%" }}
+                        value={
+                            searchParams.get("airport")
+                                ? searchParams.get("airport").split(",")
+                                : []
+                        }
+                        onChange={(vals) => updateUrlParams("airport", vals)}
+                    >
+                        {airportOptions.map((opt) => (
+                            <Option key={opt.value} value={opt.value}>
+                                {opt.label}
+                            </Option>
+                        ))}
+                    </Select>
                 </Col>
             )}
         </Row>

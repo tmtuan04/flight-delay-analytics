@@ -29,7 +29,7 @@ export default function AirlineAnalysisTab() {
 
         return {
             from: dayjs(from).startOf("day"),
-            to: dayjs(to).startOf("day"),
+            to: dayjs(to).endOf("day"),
         };
     }, [searchParams]);
 

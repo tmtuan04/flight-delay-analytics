@@ -5,8 +5,7 @@ import { Table, Card, Tooltip  } from "antd";
 const AirlinePerformanceTable = ({ data }) => {
     const numberFormatter = new Intl.NumberFormat("en-US");
 
-    console.log(data)
-
+    
     const columns = [
         {
             title: "Airline",

@@ -90,8 +90,6 @@ export default function AirportPerformanceTable({ data }) {
             size="middle"
             bordered
             pagination={{ 
-                pageSize: 10,
-                showSizeChanger: true,
                 showTotal: (total) => `Total ${total} airports`
             }}
             scroll={{ x: 1000 }}

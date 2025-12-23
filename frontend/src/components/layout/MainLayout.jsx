@@ -23,7 +23,7 @@ export default function MainLayout({ children }) {
             { key: "1", label: "Overview", route: "/" },
             { key: "2", label: "Airline Analysis", route: "/airline" },
             { key: "3", label: "Airport Analysis", route: "/airport" },
-            { key: "4", label: "Live Monitoring", route: "/live" },
+            { key: "4", label: "Live Analysis", route: "/live" },
         ],
         []
     );
