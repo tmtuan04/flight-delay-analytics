@@ -18,19 +18,17 @@ export default function CancellationReasonChart({ data = [] }) {
         cx,
         cy,
         midAngle,
-        innerRadius,
         outerRadius,
         value,
     }) => {
         if (!total) return null;
 
         const percent = (value / total) * 100;
-        if (percent < 1) return null;
+        if (percent <= 0) return null;
 
-        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+        const radius = outerRadius * 1.1; 
         const x = cx + radius * Math.cos(-midAngle * RADIAN);
         const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
         return (
             <text
                 x={x}

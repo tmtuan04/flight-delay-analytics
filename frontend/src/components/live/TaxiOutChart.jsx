@@ -12,24 +12,42 @@ import {
 } from "recharts";
 import dayjs from "dayjs";
 
-export default function TaxiOutChart({ data, currentAirport, onFilterChange }) {
+export default function TaxiOutChart({
+    data,
+    currentAirport,
+    onFilterChange,
+    limit,
+    onLimitChange,
+    airportOptions = [],
+}) {
+
     return (
         <Card
-            title={`Origin Taxi-Out History: ${currentAirport}`}
+            title={`Origin Taxi-Out History`}
             extra={
-                <Select
-                    defaultValue={currentAirport}
-                    onChange={onFilterChange}
-                    style={{ width: 120 }}
-                    options={[
-                        { value: "JFK", label: "JFK" },
-                        { value: "LAX", label: "LAX" },
-                        { value: "ATL", label: "ATL" },
-                        { value: "ORD", label: "ORD" },
-                    ]}
-                />
+                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    <span><b>Origin:</b></span>
+                    <Select
+                        value={currentAirport}
+                        onChange={onFilterChange}
+                        style={{ width: 120 }}
+                        options={airportOptions}
+                    />
+
+                    <span><b>Limit:</b></span>
+                    <Select
+                        value={limit ?? "all"}
+                        onChange={onLimitChange}
+                        style={{ width: 120 }}
+                        options={[
+                            { value: 20, label: "Last 20" },
+                            { value: 50, label: "Last 50" },
+                            { value: 100, label: "Last 100" },
+                            { value: "all", label: "All" },
+                        ]}
+                    />
+                </div>
             }
-            style={{ marginTop: 24 }}
         >
             <ResponsiveContainer width="100%" height={300}>
                 <ComposedChart
@@ -48,7 +66,6 @@ export default function TaxiOutChart({ data, currentAirport, onFilterChange }) {
                         stroke="#8c8c8c"
                     />
 
-                    {/* Trục trái: Avg Taxi Out (Minutes) */}
                     <YAxis
                         yAxisId="left"
                         label={{
@@ -59,7 +76,6 @@ export default function TaxiOutChart({ data, currentAirport, onFilterChange }) {
                         stroke="#1890ff"
                     />
 
-                    {/* Trục phải: Total Departures */}
                     <YAxis
                         yAxisId="right"
                         orientation="right"
@@ -72,6 +88,7 @@ export default function TaxiOutChart({ data, currentAirport, onFilterChange }) {
                     />
 
                     <Tooltip
+                        formatter={(value) => (typeof value === "number" ? value.toFixed(2) : value)}
                         labelFormatter={(t) =>
                             dayjs(t).format("YYYY-MM-DD HH:mm:ss")
                         }
@@ -82,7 +99,6 @@ export default function TaxiOutChart({ data, currentAirport, onFilterChange }) {
                     />
                     <Legend />
 
-                    {/* Đường Taxi Out - Màu Xanh Dương */}
                     <Line
                         yAxisId="left"
                         type="monotone"
@@ -93,7 +109,6 @@ export default function TaxiOutChart({ data, currentAirport, onFilterChange }) {
                         dot={{ r: 4 }}
                     />
 
-                    {/* Đường Departures - Màu Xanh Lá (Dạng nét đứt hoặc Area mờ) */}
                     <Line
                         yAxisId="right"
                         type="monotone"

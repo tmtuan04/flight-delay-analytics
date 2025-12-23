@@ -1,103 +1,67 @@
-import { Card, Col, Row, Typography } from "antd";
-import {
-    WarningOutlined,
-    FieldTimeOutlined,
-    StopOutlined,
-} from "@ant-design/icons";
+import { Card, Statistic, Row, Col, Badge, Progress, Typography } from "antd";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
-export default function DestStatsCards({ data }) {
+export default function DestStatsCards({ data = [] }) {
+    if (!data || data.length === 0) return null;
+
     return (
-        <Row gutter={[16, 16]}>
-            {data.map((item) => (
-                <Col key={item.dest} xs={24} sm={12} md={8} lg={4}>
-                    {" "}
-                    {/* 5 cols on lg */}
-                    <Card
-                        style={{
-                            borderColor: "#ff4d4f",
-                            backgroundColor: "#1f1f1f", // Dark theme background for card
-                            color: "white",
-                        }}
-                        bodyStyle={{ padding: "12px" }}
+        <Row justify="center" gutter={[20, 20]} style={{ marginBottom: 20 }}>
+            {data.map((item) => {
+                const nasDelay = Number(item.avg_nas_delay || 0);
+
+                return (
+                    <Col
+                        key={item.dest}
+                        xs={24}
+                        sm={12}
+                        md={8}
+                        lg={4}
                     >
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                marginBottom: 12,
-                            }}
-                        >
-                            <Title
-                                level={4}
-                                style={{ color: "white", margin: 0 }}
-                            >
-                                {item.dest}
-                            </Title>
-                            <WarningOutlined
-                                style={{ color: "#ff4d4f", fontSize: "18px" }}
-                            />
-                        </div>
+                        <Card size="small" variant="outlined">
+                            {/* Header */}
+                            <Row justify="space-between" align="middle">
+                                <Text strong style={{ fontSize: 18 }}>
+                                    {item.dest}
+                                </Text>
+                                <Badge status="processing" />
+                            </Row>
 
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                marginBottom: 8,
-                            }}
-                        >
-                            <Text style={{ color: "#a6a6a6" }}>
-                                <StopOutlined /> Holding
-                            </Text>
-                            <Text strong style={{ color: "white" }}>
-                                {item.holding_count}
-                            </Text>
-                        </div>
+                            {/* Items Holding */}
+                            <div style={{ marginTop: 8 }}>
+                                <Row justify="space-between" align="middle">
+                                    <Text type="secondary" style={{ fontSize: 14 }}>
+                                        Items Holding
+                                    </Text>
 
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                            }}
-                        >
-                            <Text style={{ color: "#a6a6a6" }}>
-                                <FieldTimeOutlined /> NAS Delay
-                            </Text>
-                            <Text
-                                strong
-                                style={{ color: "#e6f7ff", fontSize: "16px" }}
-                            >
-                                {item.avg_nas_delay}m
-                            </Text>
-                        </div>
+                                    <Text strong style={{ fontSize: 14 }}>
+                                        {item.holding_count}
+                                    </Text>
+                                </Row>
+                            </div>
 
-                        {/* Progress bar simulation */}
-                        <div
-                            style={{
-                                marginTop: 12,
-                                height: 4,
-                                background: "#434343",
-                                borderRadius: 2,
-                            }}
-                        >
-                            <div
-                                style={{
-                                    width: `${Math.min(
-                                        item.avg_nas_delay,
-                                        100
-                                    )}%`,
-                                    height: "100%",
-                                    background: "#ff4d4f",
-                                    borderRadius: 2,
-                                }}
-                            ></div>
-                        </div>
-                    </Card>
-                </Col>
-            ))}
+                            {/* NAS Delay */}
+                            <div style={{ marginTop: 6 }}>
+                                <Row justify="space-between" align="middle">
+                                    <Text type="secondary" style={{ fontSize: 14 }}>
+                                        NAS Delay
+                                    </Text>
+
+                                    <Text strong style={{ fontSize: 14 }}>
+                                        {nasDelay.toFixed(2)} mins
+                                    </Text>
+                                </Row>
+
+                                <Progress
+                                    percent={Math.min(nasDelay, 100)}
+                                    size="small"
+                                    showInfo={false}
+                                />
+                            </div>
+                        </Card>
+                    </Col>
+                );
+            })}
         </Row>
     );
 }

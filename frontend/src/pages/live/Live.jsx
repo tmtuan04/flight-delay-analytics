@@ -1,82 +1,111 @@
-// import { useEffect, useState } from "react";
-// import { Spin } from "antd";
-// import { ReloadOutlined } from "@ant-design/icons";
-// import { getLiveDashboardData } from "../../api/live";
-
-// import DestStatsCards from "../../components/live/DestStatsCards";
+import { useEffect, useState } from "react";
+import { Spin, Row, Col, Typography, Button } from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
+import { getLiveDashboardData, fetchOriginOptions } from "../../api/live";
+import DestStatsCards from "../../components/live/DestStatsCards";
 import TaxiOutChart from "../../components/live/TaxiOutChart";
 import LiveArrivalTable from "../../components/live/LiveArrivalTable";
-// import { getLiveDashboardData as getLiveDemo } from "../../api/astra";
+
+const { Text } = Typography;
 
 export default function LiveAnalysisTab() {
-    // const [loading, setLoading] = useState(true);
-    // const [data, setData] = useState({
-    //     destStats: [],
-    //     taxiOutHistory: [],
-    //     liveBoard: [],
-    // });
-    // const [originFilter, setOriginFilter] = useState("JFK");
+    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState({
+        destStats: [],
+        taxiOutHistory: [],
+        liveBoard: [],
+    });
 
-    // const fetchData = async () => {
-    //     setLoading(true);
-    //     try {
-    //         const result = await getLiveDashboardData(originFilter);
-    //         setData(result);
-    //     } catch (error) {
-    //         console.error("Failed to fetch live data", error);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
+    const [airportOptions, setAirportOptions] = useState([]);
+    
+    // Filter cho biểu đồ (Chart)
+    const [originFilter, setOriginFilter] = useState("ATL"); 
+    const [chartLimit, setChartLimit] = useState(20);
 
-    // // Initial Fetch
-    // useEffect(() => {
-    //     fetchData();
+    // Filter cho bảng (Table) - Mặc định xem máy bay đến LAX
+    const [tableDest, setTableDest] = useState("LAX");
 
-    //     // Optional: Auto refresh every 10 seconds for "Live" feel
-    //     const interval = setInterval(fetchData, 10000);
-    //     return () => clearInterval(interval);
-    // }, [originFilter]);
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            // Gọi hàm tổng hợp từ API
+            const result = await getLiveDashboardData(
+                originFilter, // chartOrigin
+                chartLimit,   // chartLimit
+                tableDest     // tableDest
+            );
+            setData(result);
+        } catch (error) {
+            console.error("Failed to fetch live data", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    // const handleFilterChange = (val) => {
-    //     setOriginFilter(val);
-    // };
+    // Gọi lại API khi filter thay đổi
+    useEffect(() => {
+        fetchData();
+
+        const interval = setInterval(fetchData, 30000);
+        return () => clearInterval(interval);
+    }, [originFilter, chartLimit, tableDest]);
+
+    useEffect(() => {
+        fetchOriginOptions().then(setAirportOptions);
+    }, []);
+
+    const handleChartFilterChange = (val) => {
+        setOriginFilter(val);
+    };
+
+    const handleLimitChange = (val) => {
+        setChartLimit(val === "all" ? undefined : val);
+    };
 
     return (
         <>
-            {/* <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 20,
-                }}
-            >
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        color: "#1890ff",
-                        cursor: "pointer",
-                    }}
+            <Row justify="space-between" align="middle">
+                <Text className="font-semibold" style={{ fontSize: 16 }}>Destination Statistics</Text>
+
+                <Button
+                    type="primary"
+                    icon={<ReloadOutlined spin={loading} />}
                     onClick={fetchData}
+                    loading={loading}
+                    style={{ padding: 8 }}
                 >
-                    <ReloadOutlined spin={loading} />
-                    <span>Refresh</span>
+                    Refresh Data
+                </Button>
+            </Row>
+
+            <Spin spinning={loading}>
+                {/* 1. Hàng đầu tiên: Các thẻ Cards (Dest Stats) */}
+                <div style={{ marginBottom: 24, marginTop: 12 }}>
+                    <DestStatsCards data={data.destStats} />
                 </div>
-            </div> */}
 
-            {/* <Spin spinning={loading}>
+                {/* 2. Hàng thứ hai: Biểu đồ Taxi Out & Info */}
+                <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
+                    <Col span={24}>
+                        <TaxiOutChart
+                            data={data.taxiOutHistory}
+                            currentAirport={originFilter}
+                            onFilterChange={handleChartFilterChange}
+                            limit={chartLimit}
+                            onLimitChange={handleLimitChange}
+                            airportOptions={airportOptions}
+                        />
+                    </Col>
+                </Row>
 
-                <TaxiOutChart
-                    data={data.taxiOutHistory}
-                    currentAirport={originFilter}
-                    onFilterChange={handleFilterChange}
+                {/* 3. Hàng cuối: Bảng Live Board */}
+                <LiveArrivalTable
+                    data={data.liveBoard}
+                    dest={tableDest}
+                    onDestChange={setTableDest}
+                    airportOptions={airportOptions}
                 />
-
-                <LiveArrivalTable data={data.liveBoard} />
-            </Spin> */}
+            </Spin>
         </>
     );
 }
